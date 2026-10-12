@@ -230,13 +230,17 @@ td.t { font-weight: 800; color: var(--yellow); }
   <header>
     <span class="eyebrow">Dresseur en entraînement</span>
     <h1>Le défi des additions et <em>soustractions</em></h1>
-    <p class="lead">Trouve le résultat. Réussis 10 bonnes réponses le plus vite possible. Toutes les 5 bonnes réponses, tu attrapes un nouveau Pokémon !</p>
+    <p class="lead">Complète chaque calcul. Réussis 10 bonnes réponses le plus vite possible. Toutes les 5 bonnes réponses, tu attrapes un nouveau Pokémon !</p>
   </header>
 
   <section class="settings" aria-label="Réglages de la partie">
     <div class="group" role="group" aria-labelledby="o-label">
       <span class="label" id="o-label">Quoi calculer ?</span>
       <div class="chips" id="opChips"></div>
+    </div>
+    <div class="group" role="group" aria-labelledby="k-label">
+      <span class="label" id="k-label">Type de questions</span>
+      <div class="chips" id="holeChips"></div>
     </div>
     <div class="group" role="group" aria-labelledby="p-label">
       <span class="label" id="p-label">Les nombres vont jusqu'à</span>
@@ -263,7 +267,7 @@ td.t { font-weight: 800; color: var(--yellow); }
       </div>
       <div class="fb" id="fb" role="status" aria-live="polite"></div>
       <div class="q-actions"><button class="big-btn alt" id="okBtn" type="submit">Valider</button></div>
-      <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="Résultat">
+      <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="Nombre à trouver">
     </form>
 
     <div class="stage" id="stageDone" hidden>
@@ -344,7 +348,7 @@ td.t { font-weight: 800; color: var(--yellow); }
   var BADGES = POKE.map(function (p, i) { return { at: (i + 1) * EVERY, file: p[0], name: p[1] }; });
 
   var KEY = "additions-soustractions-v1";
-  function defaults() { return { total: 0, history: [], palier: 20, op: "+", music: true }; }
+  function defaults() { return { total: 0, history: [], palier: 20, op: "+", music: true, holes: false }; }
   var store = load();
   function load() {
     try {
@@ -356,6 +360,7 @@ td.t { font-weight: 800; color: var(--yellow); }
         if (PALIERS.indexOf(o.palier) !== -1) d.palier = o.palier;
         if (o.op === "+" || o.op === "-" || o.op === "mix") d.op = o.op;
         if (typeof o.music === "boolean") d.music = o.music;
+        if (typeof o.holes === "boolean") d.holes = o.holes;
         return d;
       }
     } catch (e) {}
@@ -365,7 +370,7 @@ td.t { font-weight: 800; color: var(--yellow); }
 
   function $(id) { return document.getElementById(id); }
   var els = {
-    opChips: $("opChips"), palierChips: $("palierChips"), clock: $("clock"), score: $("score"), segs: $("segs"), pauseBtn: $("pauseBtn"),
+    opChips: $("opChips"), holeChips: $("holeChips"), palierChips: $("palierChips"), clock: $("clock"), score: $("score"), segs: $("segs"), pauseBtn: $("pauseBtn"),
     stageStart: $("stageStart"), stageQ: $("stageQ"), stageDone: $("stageDone"),
     slotA: $("slotA"), slotB: $("slotB"), slotC: $("slotC"), opSign: $("opSign"), answer: $("answer"), fb: $("fb"), okBtn: $("okBtn"),
     startBtn: $("startBtn"), againBtn: $("againBtn"),
@@ -404,7 +409,7 @@ td.t { font-weight: 800; color: var(--yellow); }
   var state = "idle", correct = 0, errors = 0, q = null, last = null, busy = false, missed = [], wait = null;
   function rnd(n) { return Math.floor(Math.random() * n); }
   function build(op, a, b, c) {
-    var kind = 0;   /* toujours le résultat après le = (les trous ailleurs : kind 1 ou 2, désactivés pour le CP) */
+    var r = Math.random(), kind = store.holes ? (r < 0.4 ? 0 : (r < 0.7 ? 1 : 2)) : 0;   /* sans option "à trous" : toujours le résultat après le = */
     return { op: op, a: a, b: b, c: c, kind: kind, key: op + a + "," + b + ":" + kind, answer: kind === 0 ? c : (kind === 1 ? b : a) };
   }
   function makeQ(op, max) {
@@ -545,13 +550,20 @@ td.t { font-weight: 800; color: var(--yellow); }
 
   /* Affichages */
   function renderSettings() {
-    els.opChips.textContent = ""; els.palierChips.textContent = "";
+    els.opChips.textContent = ""; els.palierChips.textContent = ""; els.holeChips.textContent = "";
     OPS.forEach(function (o) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "chip op"; b.textContent = o.label;
       b.setAttribute("aria-pressed", String(store.op === o.id));
       b.addEventListener("click", function () { store.op = o.id; save(); renderSettings(); });
       els.opChips.appendChild(b);
+    });
+    [{ v: false, label: "Résultat après le =" }, { v: true, label: "À trous" }].forEach(function (o) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip op"; b.textContent = o.label;
+      b.setAttribute("aria-pressed", String(store.holes === o.v));
+      b.addEventListener("click", function () { store.holes = o.v; save(); renderSettings(); });
+      els.holeChips.appendChild(b);
     });
     PALIERS.forEach(function (p) {
       var b = document.createElement("button");
