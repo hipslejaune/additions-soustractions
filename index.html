@@ -230,7 +230,7 @@ td.t { font-weight: 800; color: var(--yellow); }
   <header>
     <span class="eyebrow">Dresseur en entraînement</span>
     <h1>Le défi des additions et <em>soustractions</em></h1>
-    <p class="lead">Trouve le nombre qui manque. Réussis 10 bonnes réponses le plus vite possible. Toutes les 5 bonnes réponses, tu attrapes un nouveau Pokémon !</p>
+    <p class="lead">Trouve le résultat. Réussis 10 bonnes réponses le plus vite possible. Toutes les 5 bonnes réponses, tu attrapes un nouveau Pokémon !</p>
   </header>
 
   <section class="settings" aria-label="Réglages de la partie">
@@ -263,7 +263,7 @@ td.t { font-weight: 800; color: var(--yellow); }
       </div>
       <div class="fb" id="fb" role="status" aria-live="polite"></div>
       <div class="q-actions"><button class="big-btn alt" id="okBtn" type="submit">Valider</button></div>
-      <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="Nombre qui manque">
+      <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="Résultat">
     </form>
 
     <div class="stage" id="stageDone" hidden>
@@ -404,7 +404,7 @@ td.t { font-weight: 800; color: var(--yellow); }
   var state = "idle", correct = 0, errors = 0, q = null, last = null, busy = false, missed = [], wait = null;
   function rnd(n) { return Math.floor(Math.random() * n); }
   function build(op, a, b, c) {
-    var r = Math.random(), kind = r < 0.4 ? 0 : (r < 0.7 ? 1 : 2);
+    var kind = 0;   /* toujours le résultat après le = (les trous ailleurs : kind 1 ou 2, désactivés pour le CP) */
     return { op: op, a: a, b: b, c: c, kind: kind, key: op + a + "," + b + ":" + kind, answer: kind === 0 ? c : (kind === 1 ? b : a) };
   }
   function makeQ(op, max) {
